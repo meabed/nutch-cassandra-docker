@@ -1,6 +1,29 @@
-####Apache Nutch With Cassandra With Elasticsearch and Hadoop on Docker
+####Apache Nutch 2.x with Cassandra With Elasticsearch on Docker
 =======================
 ------
+
+This project is 3 Docker containers running Apache Nutch 2.x configured with Cassandra storage and ElasticSearch.
+
+Due to the lack of integration information between Nutch 2.x / Cassandra / ElasticSearch, I have created this docker containers with configuration and integration between them.
+
+###Usage:
+
+```
+
+# Build the images ( this will build the 3 application )
+./bin/build.sh
+
+# Start all 3 containers with data folders from scripts
+./bin/start.sh
+
+# stop all containers 
+./bin/stop.sh
+
+# restart containers 
+./bin/stop.sh
+
+```
+
 
 ###MAC OSx notes
 
