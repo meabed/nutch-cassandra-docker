@@ -17,7 +17,7 @@ RUN apt-get install -y ant
 
 #Download nutch
 
-RUN mkdir -p /opt/downloads && cd /opt/downloads && curl -SsfLO "http://ftp-stud.hs-esslingen.de/pub/Mirrors/ftp.apache.org/dist/nutch/$NUTCH_VERSION/apache-nutch-$NUTCH_VERSION-src.tar.gz"
+RUN mkdir -p /opt/downloads && cd /opt/downloads && curl -SsfLO "http://archive.apache.org/dist/nutch/$NUTCH_VERSION/apache-nutch-$NUTCH_VERSION-src.tar.gz"
 RUN cd /opt && tar xvfz /opt/downloads/apache-nutch-$NUTCH_VERSION-src.tar.gz
 #WORKDIR /opt/apache-nutch-$NUTCH_VERSION
 ENV NUTCH_ROOT /opt/apache-nutch-$NUTCH_VERSION
@@ -29,7 +29,7 @@ ENV HOME /root
 RUN vim -c 'g/name="gora-cassandra"/+1d' -c 'x' $NUTCH_ROOT/ivy/ivy.xml
 RUN vim -c 'g/name="gora-cassandra"/-1d' -c 'x' $NUTCH_ROOT/ivy/ivy.xml
 
-RUN vim -c '%s/name="elasticsearch" rev=.*/name="elasticsearch" rev="1.3.2"/g' -c 'x' $NUTCH_ROOT/ivy/ivy.xml
+RUN vim -c '%s/name="elasticsearch" rev=.*/name="elasticsearch" rev="1.4.3"/g' -c 'x' $NUTCH_ROOT/ivy/ivy.xml
 RUN vim -c '%s/item.failed()/item.isFailed()/g' -c 'x' $NUTCH_ROOT/src/java/org/apache/nutch/indexer/elastic/ElasticWriter.java
 
 RUN cd $NUTCH_ROOT && ant runtime
