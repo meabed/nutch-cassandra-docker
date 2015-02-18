@@ -29,7 +29,7 @@ ENV HOME /root
 RUN vim -c 'g/name="gora-cassandra"/+1d' -c 'x' $NUTCH_ROOT/ivy/ivy.xml
 RUN vim -c 'g/name="gora-cassandra"/-1d' -c 'x' $NUTCH_ROOT/ivy/ivy.xml
 
-RUN vim -c '%s/name="elasticsearch" rev=.*/name="elasticsearch" rev="1.4.3"/g' -c 'x' $NUTCH_ROOT/ivy/ivy.xml
+RUN vim -c '%s/name="elasticsearch" rev=.*/name="elasticsearch" rev="1.3.2"/g' -c 'x' $NUTCH_ROOT/ivy/ivy.xml
 RUN vim -c '%s/item.failed()/item.isFailed()/g' -c 'x' $NUTCH_ROOT/src/java/org/apache/nutch/indexer/elastic/ElasticWriter.java
 
 RUN cd $NUTCH_ROOT && ant runtime
@@ -69,15 +69,14 @@ ADD config/nutch-site.xml $NUTCH_HOME/conf/nutch-site.xml
 # Changes to the crawl script to support Elasticsearch index instead of SOLR
 RUN sed  -i '/^SOLRURL=".*/ s/.*/#&\nESNODE="$3"/' $NUTCH_HOME/bin/crawl
 
-RUN sed  -i '/^if \[ "$SOLRURL".*/ s/.*/if \[ "$ESNODE" = "" \]; then\n    echo "Missing Elasticsearch Node Name : crawl <seedDir> <crawlID> <esNODE> <numberOfRounds>"\nfi\n\n\n&/' $NUTCH_HOME/bin/crawl
-RUN sed  -i '/on SOLR index .*/ s/.*/  echo "Indexing $CRAWL_ID on Elasticsearch Node -> $ESNODE"\n  __bin_nutch index $commonOptions -D elastic.cluster=$ESNODE -all -crawlId "$CRAWL_ID"\n\n    else\n      echo "Skipping indexing tasks: no Elasticsearch node name provided."\n    fi\n\n\n&/' $NUTCH_HOME/bin/crawl
+RUN sed  -i '/^if \[ "$SOLRURL".*/ s/.*/if \[ "$ESNODE" = "" \]; then\n    echo "Missing Elasticsearch Node Name : crawl <seedDir> <crawlID> <esNODE> <numberOfRounds>"\n    exit -1;\nfi\n\n\n&/' $NUTCH_HOME/bin/crawl
+RUN sed  -i '/on SOLR index .*/ s/.*/  echo "Indexing $CRAWL_ID on Elasticsearch Node -> $ESNODE"\n  $bin\/nutch elasticindex $commonOptions $ESNODE -all -crawlId $CRAWL_ID\n\n\n&/' $NUTCH_HOME/bin/crawl
 
 RUN vim -c 'g/SOLR dedup/-1,+5d' -c 'x' $NUTCH_HOME/bin/crawl
-RUN vim -c 'g/$SOLRURL" = ""/-1,+3d' -c 'x' $NUTCH_HOME/bin/crawl
+RUN vim -c 'g/"$SOLRURL" =/-1,+4d' -c 'x' $NUTCH_HOME/bin/crawl
 
-RUN vim -c 'g/CRAWL_ID on SOLR index/-1,+1d' -c 'x' $NUTCH_HOME/bin/crawl
-RUN vim -c '%s/<solrURL>/<esNODE>/gi' -c 'x' $NUTCH_HOME/bin/crawl
-RUN vim -c '%s/SOLRURL/ESNODE/g' -c 'x' $NUTCH_HOME/bin/crawl
+RUN vim -c 'g/on SOLR index /-1,+2d' -c 'x' $NUTCH_HOME/bin/crawl
+RUN vim -c '%s/<solrURL>/<esNODE>/' -c 'x' $NUTCH_HOME/bin/crawl
 
 # Port that nutchserver will use
 ENV NUTCHSERVER_PORT 8899
