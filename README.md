@@ -67,6 +67,18 @@ ElasticSearch node name for usage in the crawling with Nutch : iData
 
 ElasticSearch Installed with some GUI plugins so you can access the interface and see whats being indexed, URL as : 
 
+You can see the ElasticSearch HQ Plugin UI in url :
+ 
+http://<dockerhost_ip>:9200/_plugin/HQ
+
+additionally there is 3 other plugins installed you can access them as the url above
+
+ ```
+royrusso/elasticsearch-HQ
+lmenezes/elasticsearch-kopf
+lukas-vlcek/bigdesk
+mobz/elasticsearch-head
+````
 
 ###MAC OSx notes
 - you need to mount data folders to your VirtualMachine to be able to get persistent data every time you run this application.
