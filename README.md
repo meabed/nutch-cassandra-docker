@@ -6,7 +6,9 @@ This project is 3 Docker containers running Apache Nutch 2.x configured with Cas
 
 Due to the lack of integration information between Nutch 2.x / Cassandra / ElasticSearch, I have created this docker containers with configuration and integration between them.
 
-This is project is fully operational but its still experimental, any feedback, suggestions or contribution will be highly appreciated!  
+This is project is fully operational but its still experimental, any feedback, suggestions or contribution will be highly appreciated! 
+
+Current Nutch version is 2.2.1 ( 2.3 missing elastic search indexerJob, so there is not support for it yes, however if you will solr it will work just fine), The Repository will have tags for each version of Nutch in-case of changes or configuration!
 
 ###Usage notes:
 
@@ -34,13 +36,16 @@ This is project is fully operational but its still experimental, any feedback, s
 ```
 # Run the crawler, You can use docker exec command, or you can docker attach to the container and run the commands there, or use docker-enter if you are using Mac OS
 
-docker exec NUTCH01 /opt/nutch/bin/crawl
+docker exec NUTCH01 /opt/nutch/bin/crawl testUrls test_crawl iData 3
 
 OR 
 
 docker-enter NUTCH01
 
-/opt/nutch/bin/crawl
+root@9ec43c388769:/# cd opt/nutch
+root@9ec43c388769:/opt/nutch# ./bin/crawl
+Missing seedDir : crawl <seedDir> <crawlID> <esNODE> <numberOfRounds>
+root@9ec43c388769:/opt/nutch# ./bin/crawl testUrls test_crawl iData 3
 
 
 ```
