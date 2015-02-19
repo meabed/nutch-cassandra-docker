@@ -16,10 +16,10 @@ Current Nutch version is 2.3 ( There is a branch for 2.2.1 and it has ElasticSea
 
 ```
 
-# Build the images ( this will build the 3 application )
+# Build the images ( this will build the application )
 ./bin/build.sh
 
-# Start all 3 containers with data folders from scripts
+# Start all containers with data folders from scripts
 ./bin/start.sh
 
 # stop all containers 
