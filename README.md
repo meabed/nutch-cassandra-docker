@@ -1,6 +1,5 @@
 ####Apache Nutch 2.x with Cassandra on Docker
 =======================
-------
 
 This project is 3 Docker containers running Apache Nutch 2.x configured with Cassandra storage.
 
@@ -37,11 +36,9 @@ Current Nutch version is 2.3 ( There is a branch for 2.2.1 and it has ElasticSea
 # Run the crawler, You can use docker exec command, or you can docker attach to the container and run the commands there, or use docker-enter if you are using Mac OS
 
 docker exec NUTCH01 /opt/nutch/bin/crawl /opt/nutch/testUrls test_crawl 3
-
-OR 
+# OR
 
 docker-enter NUTCH01
-
 root@9ec43c388769:/# cd opt/nutch
 root@9ec43c388769:/opt/nutch# ./bin/crawl
 Usage: crawl <seedDir> <crawlID> [<solrUrl>] <numberOfRounds>
@@ -52,8 +49,6 @@ root@9ec43c388769:/opt/nutch# ./bin/crawl testUrls test_crawl 3
 ###NOTES:
 
 Nutch 2.x Container name : NUTCH01
-
-----------
 
 Cassandra Container name : CASS01
 
