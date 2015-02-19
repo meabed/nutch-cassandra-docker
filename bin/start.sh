@@ -15,4 +15,4 @@ cassandraIP=$("$B_DIR"/ipof.sh $cassandraId)
 # http://dockerhost:9200/_plugin/kopf/
 # http://dockerhost:9200/_plugin/HQ/
 
-docker run -d -p 8899:8899 -P -e CASSANDRA_NODE_NAME=$cassandraNodeName -e ES_NODE_NAME=$esNodeName -it --link $cassandraNodeName:$cassandraNodeName -v $DOCKER_DATA_FOLDER:/data:rw --name $nutchNodeName meabed/nutch:2.3
+docker run -d -p 8899:8899 -P -e CASSANDRA_NODE_NAME=$cassandraNodeName -it --link $cassandraNodeName:$cassandraNodeName -v $DOCKER_DATA_FOLDER:/data:rw --name $nutchNodeName meabed/nutch:2.3

@@ -30,13 +30,13 @@ Current Nutch version is 2.3 ( There is a branch for 2.2.1 and it has ElasticSea
 ./bin/stop.sh
 
 ```
-3. Start Crawling with Nutch 2.x ( I have modified "bin/crawl" script to work with ElasticSearch, Sine there is no Nutch 2.x bin/crawl script that works with ElasticSearch) 
+3. Start Crawling with Nutch 2.2.
 
 
 ```
 # Run the crawler, You can use docker exec command, or you can docker attach to the container and run the commands there, or use docker-enter if you are using Mac OS
 
-docker exec NUTCH01 /opt/nutch/bin/crawl testUrls test_crawl 3
+docker exec NUTCH01 /opt/nutch/bin/crawl /opt/nutch/testUrls test_crawl 3
 
 OR 
 
@@ -44,8 +44,8 @@ docker-enter NUTCH01
 
 root@9ec43c388769:/# cd opt/nutch
 root@9ec43c388769:/opt/nutch# ./bin/crawl
-Missing seedDir : crawl <seedDir> <crawlID> <esNODE> <numberOfRounds>
-root@9ec43c388769:/opt/nutch# ./bin/crawl testUrls test_crawl iData 3
+Usage: crawl <seedDir> <crawlID> [<solrUrl>] <numberOfRounds>
+root@9ec43c388769:/opt/nutch# ./bin/crawl testUrls test_crawl 3
 
 
 ```
@@ -59,26 +59,6 @@ Cassandra Container name : CASS01
 
 Cassandra installed with OpsCenter
 
---------
-
-ElasticSearch Container name : ES01
-
-ElasticSearch node name for usage in the crawling with Nutch : iData
-
-ElasticSearch Installed with some GUI plugins so you can access the interface and see whats being indexed, URL as : 
-
-You can see the ElasticSearch HQ Plugin UI in url :
- 
-http://<dockerhost_ip>:9200/_plugin/HQ
-
-additionally there is 3 other plugins installed you can access them as the url above
-
- ```
-royrusso/elasticsearch-HQ
-lmenezes/elasticsearch-kopf
-lukas-vlcek/bigdesk
-mobz/elasticsearch-head
-````
 
 ###MAC OSx notes
 - you need to mount data folders to your VirtualMachine to be able to get persistent data every time you run this application.
@@ -87,11 +67,6 @@ mobz/elasticsearch-head
 ```
 mkdir ~/docker-data
 mkdir ~/docker-data/cassandra
-mkdir -p ~/docker-data/es
-mkdir -p ~/docker-data/es/data/elasticsearch
-mkdir -p ~/docker-data/es/log
-mkdir -p ~/docker-data/es/plugins
-mkdir -p ~/docker-data/es/work
 mkdir ~/docker-data/nutch
 
 chmod -R 777  ~/docker-data/
