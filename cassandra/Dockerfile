@@ -1,72 +1,77 @@
-#
-# Cassandra
-# meabed/debian-jdk
-# docker build -t meabed/cassandra:latest .
-#
-# sudo sysctl -w vm.max_map_count=2621444
-# sudo su
-# echo "vm.max_map_count=262144" >> /etc/sysctl.conf
+# vim:set ft=dockerfile:
+FROM debian:jessie-backports
 
-# you might need to run this commands in DOCKER HOST
-# ulimit -l unlimited
-# ulimit -n 16240
-# ulimit -c unlimited
+# explicitly set user/group IDs
+RUN groupadd -r cassandra --gid=999 && useradd -r -g cassandra --uid=999 cassandra
 
-FROM meabed/debian-jdk
-MAINTAINER Mohamed Meabed "mo.meabed@gmail.com"
+# grab gosu for easy step-down from root
+ENV GOSU_VERSION 1.7
+RUN set -x \
+	&& apt-get update && apt-get install -y --no-install-recommends ca-certificates wget && rm -rf /var/lib/apt/lists/* \
+	&& wget -O /usr/local/bin/gosu "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$(dpkg --print-architecture)" \
+	&& wget -O /usr/local/bin/gosu.asc "https://github.com/tianon/gosu/releases/download/$GOSU_VERSION/gosu-$(dpkg --print-architecture).asc" \
+	&& export GNUPGHOME="$(mktemp -d)" \
+	&& gpg --keyserver ha.pool.sks-keyservers.net --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4 \
+	&& gpg --batch --verify /usr/local/bin/gosu.asc /usr/local/bin/gosu \
+	&& rm -r "$GNUPGHOME" /usr/local/bin/gosu.asc \
+	&& chmod +x /usr/local/bin/gosu \
+	&& gosu nobody true \
+	&& apt-get purge -y --auto-remove ca-certificates wget
 
-USER root
-ENV DEBIAN_FRONTEND noninteractive
+# solves warning: "jemalloc shared library could not be preloaded to speed up memory allocations"
+RUN apt-get update && apt-get install -y --no-install-recommends libjemalloc1 && rm -rf /var/lib/apt/lists/*
 
+# https://github.com/docker-library/cassandra/pull/98#issuecomment-280761137
+RUN { \
+		echo 'Package: openjdk-* ca-certificates-java'; \
+		echo 'Pin: release n=*-backports'; \
+		echo 'Pin-Priority: 990'; \
+	} > /etc/apt/preferences.d/java-backports
 
-# ADD DataStax sources
-RUN echo "deb http://debian.datastax.com/community stable main" | tee -a /etc/apt/sources.list.d/cassandra.sources.list
-RUN curl -L http://debian.datastax.com/debian/repo_key | apt-key add -
+# https://wiki.apache.org/cassandra/DebianPackaging#Adding_Repository_Keys
+ENV GPG_KEYS \
+# gpg: key 0353B12C: public key "T Jake Luciani <jake@apache.org>" imported
+	514A2AD631A57A16DD0047EC749D6EEC0353B12C \
+# gpg: key FE4B2BDA: public key "Michael Shuler <michael@pbandjelly.org>" imported
+	A26E528B271F19B9E5D8E19EA278B781FE4B2BDA
+RUN set -ex; \
+	export GNUPGHOME="$(mktemp -d)"; \
+	for key in $GPG_KEYS; do \
+		gpg --keyserver ha.pool.sks-keyservers.net --recv-keys "$key"; \
+	done; \
+	gpg --export $GPG_KEYS > /etc/apt/trusted.gpg.d/cassandra.gpg; \
+	rm -r "$GNUPGHOME"; \
+	apt-key list
 
-RUN apt-get update
+RUN echo 'deb http://www.apache.org/dist/cassandra/debian 310x main' >> /etc/apt/sources.list.d/cassandra.list
 
-# Install cassandra
-RUN apt-get install -y dsc21
-RUN apt-get install -y opscenter
+ENV CASSANDRA_VERSION 3.10
 
-# Comment the ulimit setters by cassandra deamon
-RUN sed  -i "/^[^#]*ulimit/ s/.*/#&/"  /etc/init.d/cassandra
+RUN apt-get update \
+	&& apt-get install -y \
+		cassandra="$CASSANDRA_VERSION" \
+		cassandra-tools="$CASSANDRA_VERSION" \
+	&& rm -rf /var/lib/apt/lists/*
 
+# https://issues.apache.org/jira/browse/CASSANDRA-11661
+RUN sed -ri 's/^(JVM_PATCH_VERSION)=.*/\1=25/' /etc/cassandra/cassandra-env.sh
 
-RUN service cassandra stop
-RUN rm -rf /var/lib/cassandra/data/system/*
+ENV CASSANDRA_CONFIG /etc/cassandra
 
-RUN sed -ri 's/#PermitRootLogin yes/PermitRootLogin yes/g' /etc/ssh/sshd_config
-RUN sed -ri 's/UsePAM yes/#UsePAM yes/g' /etc/ssh/sshd_config
-RUN sed -ri 's/#UsePAM no/UsePAM no/g' /etc/ssh/sshd_config
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chown root:root /docker-entrypoint.sh
+RUN chmod 777 /docker-entrypoint.sh
+ENTRYPOINT ["/docker-entrypoint.sh"]
 
+RUN mkdir -p /var/lib/cassandra "$CASSANDRA_CONFIG" \
+	&& chown -R cassandra:cassandra /var/lib/cassandra "$CASSANDRA_CONFIG" \
+	&& chmod 777 /var/lib/cassandra "$CASSANDRA_CONFIG"
+VOLUME /var/lib/cassandra
 
-RUN sed -i "/^cluster_name:/ s|.*|cluster_name: 'Cassandra Cluster'\n|" /etc/cassandra/cassandra.yaml
-RUN sed -i "/^rpc_address:/ s|.*|rpc_address: 0.0.0.0\n|" /etc/cassandra/cassandra.yaml
-
-RUN sed -ri 's/\/var\/lib\/cassandra\/data/\/var\/lib\/cassandra\/shared\/data\/cassandra/g' /etc/cassandra/cassandra.yaml
-
-# Run Cassandra as Root
-RUN sed -ri 's/-c cassandra/-c root/g' /etc/init.d/cassandra
-
-#RUN echo "broadcast_rpc_address: localhost" >>  /etc/cassandra/cassandra.yaml
-
-VOLUME ["/data"]
-
-
-#RUN rm -rf /var/lib/cassandra
-RUN mkdir -p /var/lib/cassandra/shared/data
-RUN ln -svf /data/cassandra/ /var/lib/cassandra/shared/data
-
-RUN service ssh start && service opscenterd start && service cassandra start
-
-ADD bootstrap.sh /etc/bootstrap.sh
-RUN chown root:root /etc/bootstrap.sh
-RUN chmod 700 /etc/bootstrap.sh
-
-VOLUME ["/data"]
-
-CMD ["/etc/bootstrap.sh", "-d"]
-
-# http://www.datastax.com/documentation/cassandra/2.1/cassandra/security/secureFireWall_r.html
-EXPOSE 22 8888 7000 7001 7199 9160 9042 61620 61621
+# 7000: intra-node communication
+# 7001: TLS intra-node communication
+# 7199: JMX
+# 9042: CQL
+# 9160: thrift service
+EXPOSE 7000 7001 7199 9042 9160
+CMD ["cassandra", "-f"]
